@@ -22,13 +22,13 @@ namespace ProjetArchiLog.Library.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TModel>>> GetAll()
         {
-            return await _context.Set<TModel>().Where(x => x.Active == true).ToListAsync();
+            return await _context.Set<TModel>().Where(x => !x.IsDeleted).ToListAsync();
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<TModel>> GetOneById(Guid id)
         {
-            var customer =  await _context.Set<TModel>().SingleOrDefaultAsync(x => x.Id == (id) && x.Active);
+            var customer =  await _context.Set<TModel>().SingleOrDefaultAsync(x => x.Id == (id) && !x.IsDeleted);
 
             if (customer == null)
             {
@@ -92,7 +92,7 @@ namespace ProjetArchiLog.Library.Controllers
 
         private bool ModelExists(Guid id)
         {
-            return _context.Set<TModel>().Any(e => e.Id == id && e.Active);
+            return _context.Set<TModel>().Any(e => e.Id == id && !e.IsDeleted);
         }
     }
 }
