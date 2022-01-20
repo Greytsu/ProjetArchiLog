@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using ProjetArchiLog.Library.Extensions;
+using Serilog;
 
 namespace ProjetArchiLog.Library.Controllers
 {
@@ -24,6 +25,8 @@ namespace ProjetArchiLog.Library.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams)
         {
+            Log.Information("GET ALL " + typeof(TModel).Name);
+
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
             //GetRequest = HandleSorting<TModel>(GetRequest, SortParams.Split(","));
