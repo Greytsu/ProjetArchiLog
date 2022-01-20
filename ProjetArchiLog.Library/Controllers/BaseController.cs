@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
-using static ProjetArchiLog.Library.Utils.SortingUtil;
+using ProjetArchiLog.Library.Extensions;
 
 namespace ProjetArchiLog.Library.Controllers
 {
@@ -22,11 +22,12 @@ namespace ProjetArchiLog.Library.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll(String SortParams)
+        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams)
         {
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
-            GetRequest = HandleSorting<TModel>(GetRequest, SortParams.Split(","));
+            //GetRequest = HandleSorting<TModel>(GetRequest, SortParams.Split(","));
+            GetRequest = GetRequest.HandleSorting(SortParams);
 
             return await GetRequest.ToListAsync();
         }
