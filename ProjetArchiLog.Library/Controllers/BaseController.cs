@@ -2,11 +2,8 @@
 using ProjetArchiLog.Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
+using ProjetArchiLog.Library.Utils;
 
 namespace ProjetArchiLog.Library.Controllers
 {
@@ -19,14 +16,25 @@ namespace ProjetArchiLog.Library.Controllers
             _context = context;
         }
 
+        // GET: api/[Controller]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll()
+        public async Task<ActionResult<IEnumerable<TModel>>> GetModels([FromQuery] PaginationParams paginationModel)
         {
-            return await _context.Set<TModel>().Where(x => !x.IsDeleted).ToListAsync();
+            PaginationParams validPaginationParams = new PaginationParams(paginationModel);
+           
+            var pagingHelper = new PagingHelper<TContext, TModel>(_context, this.Request, validPaginationParams);
+
+            var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
+
+            this.Response.Headers.Add("Link", string.Join(",", pagingHelper.PagingHeader()));
+            return await GetRequest
+                .Skip((validPaginationParams.page - 1) * validPaginationParams.size)
+                .Take(validPaginationParams.size)
+                .ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TModel>> GetOneById(Guid id)
+        public async Task<ActionResult<TModel>> GetModel(Guid id)
         {
             var customer =  await _context.Set<TModel>().SingleOrDefaultAsync(x => x.Id == (id) && !x.IsDeleted);
 
@@ -71,7 +79,7 @@ namespace ProjetArchiLog.Library.Controllers
             _context.Set<TModel>().Add(model);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetOneById", new { id = model.Id }, model);
+            return CreatedAtAction("GetModel", new { id = model.Id }, model);
         }
 
         [HttpDelete("{id}")]

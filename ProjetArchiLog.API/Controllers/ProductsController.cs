@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjetArchiLog.API.Data;
 using ProjetArchiLog.API.Models;
 using ProjetArchiLog.Library.Controllers;
+using ProjetArchiLog.Library.Services;
 
 namespace ProjetArchiLog.API.Controllers
 {
@@ -16,7 +17,7 @@ namespace ProjetArchiLog.API.Controllers
     [ApiController]
     public class ProductsController : BaseController<ArchiDbContext, Product>
     { 
-        public ProductsController(ArchiDbContext context):base(context)
+        public ProductsController(ArchiDbContext context) : base(context)
         {
         }
 

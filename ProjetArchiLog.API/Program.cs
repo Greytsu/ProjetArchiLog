@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProjetArchiLog.API.Data;
+using ProjetArchiLog.Library.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ArchiDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Archi"))
 );
+
 
 var app = builder.Build();
 
