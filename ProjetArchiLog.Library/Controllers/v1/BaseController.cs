@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjetArchiLog.Library.Extensions;
 using Serilog;
+using System.Collections;
 
 namespace ProjetArchiLog.Library.Controllers.v1
 {
@@ -12,6 +13,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
     public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
+        protected static readonly String[] API_PARAMS = { "Sort", "Page", "Size" };
 
         public BaseController(TContext context)
         {
@@ -22,6 +24,10 @@ namespace ProjetArchiLog.Library.Controllers.v1
         public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams)
         {
             Log.Information("GET ALL " + typeof(TModel).Name);
+
+            List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
+            if (BadParams.Count > 0)
+                return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
 
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
