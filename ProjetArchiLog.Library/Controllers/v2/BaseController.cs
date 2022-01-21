@@ -1,8 +1,13 @@
-﻿using ProjetArchiLog.Library.Data;
-using ProjetArchiLog.Library.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Linq.Expressions;
 using ProjetArchiLog.Library.Extensions;
+using ProjetArchiLog.Library.Models;
 using Serilog;
 
 namespace ProjetArchiLog.Library.Controllers.v2
@@ -25,8 +30,15 @@ namespace ProjetArchiLog.Library.Controllers.v2
 
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
-            //GetRequest = HandleSorting<TModel>(GetRequest, SortParams.Split(","));
-            GetRequest = GetRequest.HandleSorting(SortParams);
+            try
+            {
+                GetRequest = GetRequest.HandleSorting(SortParams);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Illegal sort parameter(s)");
+            }
+            
 
             return await GetRequest.ToListAsync();
         }

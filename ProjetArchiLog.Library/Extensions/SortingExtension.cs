@@ -1,5 +1,11 @@
-﻿using ProjetArchiLog.Library.Models;
-using ProjetArchiLog.Library.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ProjetArchiLog.Library.Models;
+using static ProjetArchiLog.Library.Utils.ExistUtil;
+using static ProjetArchiLog.Library.Utils.LambdaUtil;
 
 namespace ProjetArchiLog.Library.Extensions
 {
@@ -11,21 +17,24 @@ namespace ProjetArchiLog.Library.Extensions
                 return Query;
 
             String[] SortingParams = Params.GetParams();
+
             String Collumn = SortingParams[0].Split("-")[0];
-            Console.WriteLine(Collumn);
+            if (!ExistProperty<TModel>(Collumn))
+                throw new Exception();
 
             IOrderedQueryable<TModel> SortedQuery = SortingParams[0].ToLower().Contains("desc") ?
-                Query.OrderByDescending(LambdaUtil.ToLambda<TModel>(Collumn)) :
-                Query.OrderBy(LambdaUtil.ToLambda<TModel>(Collumn));
+                Query.OrderByDescending(ToLambda<TModel>(Collumn)) :
+                Query.OrderBy(ToLambda<TModel>(Collumn));
 
             for (int i = 1; i < SortingParams.Length; i++)
             {
                 Collumn = SortingParams[i].Split("-")[0];
-                Console.WriteLine(Collumn);
+                if (!ExistProperty<TModel>(Collumn))
+                    throw new Exception();
 
                 SortedQuery = SortingParams[i].ToLower().Contains("desc") ?
-                    SortedQuery.ThenByDescending(LambdaUtil.ToLambda<TModel>(Collumn)) :
-                    SortedQuery.ThenBy(LambdaUtil.ToLambda<TModel>(Collumn));
+                    SortedQuery.ThenByDescending(ToLambda<TModel>(Collumn)) :
+                    SortedQuery.ThenBy(ToLambda<TModel>(Collumn));
             }
 
             return SortedQuery;
