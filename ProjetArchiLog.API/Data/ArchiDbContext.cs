@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProjetArchiLog.Library.Data;
 using ProjetArchiLog.API.Models;
+using ProjetArchiLog.Library.Data;
 
 namespace ProjetArchiLog.API.Data
 {
@@ -9,6 +9,6 @@ namespace ProjetArchiLog.API.Data
         public ArchiDbContext(DbContextOptions options):base(options)
         {
         }
-        public DbSet<Product> Product { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
