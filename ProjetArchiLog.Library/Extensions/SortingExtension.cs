@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ProjetArchiLog.Library.Models;
+﻿using ProjetArchiLog.Library.Models;
 using ProjetArchiLog.Library.Utils;
 
 namespace ProjetArchiLog.Library.Extensions
