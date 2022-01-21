@@ -2,17 +2,13 @@
 using ProjetArchiLog.Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Linq.Expressions;
 using ProjetArchiLog.Library.Extensions;
 using Serilog;
 
-namespace ProjetArchiLog.Library.Controllers
+namespace ProjetArchiLog.Library.Controllers.v1
 {
+    [Route("api/v1/[controller]")]
+    [ApiController]
     public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
@@ -29,7 +25,6 @@ namespace ProjetArchiLog.Library.Controllers
 
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
-            //GetRequest = HandleSorting<TModel>(GetRequest, SortParams.Split(","));
             GetRequest = GetRequest.HandleSorting(SortParams);
 
             return await GetRequest.ToListAsync();
