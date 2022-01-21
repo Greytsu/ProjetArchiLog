@@ -9,6 +9,7 @@ using System.Linq.Expressions;
 using ProjetArchiLog.Library.Extensions;
 using ProjetArchiLog.Library.Models;
 using Serilog;
+using ProjetArchiLog.Library.Data;
 
 namespace ProjetArchiLog.Library.Controllers.v2
 {
