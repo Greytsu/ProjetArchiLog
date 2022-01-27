@@ -20,12 +20,14 @@ namespace ProjetArchiLog.Library.Extensions
         }
 
         //returns a map of query params that are present in TModel
-        public static IEnumerable<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> ExtractModelProperties<TModel>(this IQueryCollection QueryParams)
+        public static IEnumerable<KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues>> ExtractModelProperties<TModel>(this IQueryCollection QueryParams, bool stringOnly = false)
         {
             List<string> ModelPropertiesNames = GetModelProperties<TModel>();
 
-            return QueryParams.IntersectBy(ModelPropertiesNames, x=>x.Key);
-                
+            return stringOnly 
+                ? QueryParams.IntersectBy(ModelPropertiesNames, x => x.Key.ToLower()).Where(x => x.GetType() == typeof(string))
+                : QueryParams.IntersectBy(ModelPropertiesNames, x => x.Key.ToLower());
+
         }
 
         //returns a list of all the properties of TModel

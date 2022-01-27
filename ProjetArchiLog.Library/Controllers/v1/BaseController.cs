@@ -8,7 +8,6 @@ using System.Collections;
 
 namespace ProjetArchiLog.Library.Controllers.v1
 {
-    [Route("api/v1/[controller]")]
     [ApiController]
     public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
@@ -21,9 +20,10 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpGet]
+        [Route("api/v1/[controller]", Name = "GetAll")]
         public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams)
         {
-            Log.Information("GET ALL " + typeof(TModel).Name);
+            Log.Information("GET ALL {0}" , typeof(TModel).Name);
 
             List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
             if (BadParams.Count > 0)
@@ -36,7 +36,27 @@ namespace ProjetArchiLog.Library.Controllers.v1
             return await GetRequest.ToListAsync();
         }
 
-        [HttpGet("{id}")]
+        [HttpGet]
+        [Route("api/v1/[controller]/search", Name = "Search")]
+        public async Task<ActionResult<IEnumerable<TModel>>> Search([FromQuery] SortingParams SortParams)
+        {
+            Log.Information("SEARCH MODEL{0}" , typeof(TModel).Name);
+
+            List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
+            if (BadParams.Count > 0)
+                return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
+
+            var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
+
+            GetRequest = GetRequest.HandleSearch(this.Request.Query);
+
+            GetRequest = GetRequest.HandleSorting(SortParams);
+
+            return await GetRequest.ToListAsync();
+        }
+
+        [HttpGet]
+        [Route("api/v1/[controller]/{id}", Name = "GetOneById")]
         public async Task<ActionResult<TModel>> GetOneById(Guid id)
         {
             var customer =  await _context.Set<TModel>().SingleOrDefaultAsync(x => x.Id == (id) && !x.IsDeleted);
@@ -49,7 +69,8 @@ namespace ProjetArchiLog.Library.Controllers.v1
             return customer;
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
+        [Route("api/v1/[controller]/{id}", Name = "PutCustomer")]
         public async Task<IActionResult> PutCustomer(Guid id, TModel model)
         {
             if (id != model.Id)
@@ -77,6 +98,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpPost]
+        [Route("api/v1/[controller]", Name = "PostCustomer")]
         public async Task<ActionResult<TModel>> PostCustomer(TModel model)
         {
             _context.Set<TModel>().Add(model);
@@ -85,7 +107,8 @@ namespace ProjetArchiLog.Library.Controllers.v1
             return CreatedAtAction("GetOneById", new { id = model.Id }, model);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
+        [Route("api/v1/[controller]/{id}", Name = "DeleteCustomer")]
         public async Task<IActionResult> DeleteCustomer(Guid id)
         {
             var context = _context.Set<TModel>();
