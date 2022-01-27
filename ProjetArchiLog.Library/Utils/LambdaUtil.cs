@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.VisualBasic.CompilerServices;
 
 namespace ProjetArchiLog.Library.Utils
 {
@@ -17,10 +16,11 @@ namespace ProjetArchiLog.Library.Utils
         
         public static IQueryable<TModel> ToLambdaFilter<TModel>(this IQueryable<TModel> Query, string propertyName, string propertyValues)
         {
-            var type = typeof(TModel).GetProperty(propertyName, System.Reflection.BindingFlags.IgnoreCase | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.PropertyType;
+            var type = typeof(TModel).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.PropertyType;
             
             var parameter = Expression.Parameter(typeof(TModel));
             var property = Expression.Property(parameter, propertyName);
+            Expression filteredQuery = null;
 
             if (type == typeof(string))
             {
@@ -29,14 +29,11 @@ namespace ProjetArchiLog.Library.Utils
                     throw new Exception("String type can't be filtered by an array");
 
                 MethodInfo? methodInfo = typeof(string).GetMethod("Equals", new[] { typeof(string) });
-                Expression filteredQuery = null;
                 foreach (var param in propertyValues.Split(","))
                 {
                     var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(param, typeof(string)) });
                     filteredQuery = filteredQuery == null ? condition : Expression.Or(filteredQuery, condition);
                 }
-
-                return Query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
             }
             
             else if (type == typeof(int))
@@ -45,15 +42,32 @@ namespace ProjetArchiLog.Library.Utils
                 if (propertyValues.Contains("["))
                 {
                     var paramValues = propertyValues.Replace("[", "").Replace("]","").Split(",");
-                    Console.WriteLine(paramValues);
+                    if (paramValues.Length == 2)
+                    {
+                        int paramInt = 0;
+                        Int32.TryParse(paramValues[0], out paramInt);
+
+                        MethodInfo? methodInfo = typeof(int).GetMethod("CompareTo", new[] { typeof(int) });
+                        if(methodInfo == null) Console.WriteLine("null");
+                        var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
+                        filteredQuery = condition;
+                        
+                        Int32.TryParse(paramValues[1], out paramInt);
+                        
+                        methodInfo = typeof(int).GetMethod("CompareTo", new[] { typeof(int) });
+                        condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
+                        filteredQuery = condition;
+                    }
                 }
                 else
                 {
                     MethodInfo? methodInfo = typeof(int).GetMethod("Equals", new[] { typeof(int) });
-                    Expression filteredQuery = null;
-                    foreach (var param in propertyValues.Split(","))
+                    foreach (string param in propertyValues.Split(","))
                     {
-                        var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(param, typeof(int)) });
+                        int paramInt = 0;
+                        Int32.TryParse(param, out paramInt);
+                        
+                        var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
                         filteredQuery = filteredQuery == null ? condition : Expression.Or(filteredQuery, condition);
                     }
                 }
@@ -63,8 +77,10 @@ namespace ProjetArchiLog.Library.Utils
             {
                 Console.WriteLine("DateTime");
             }
-
-            var propAsObject = Expression.Convert(property, typeof(object));
+            
+            
+            if(filteredQuery != null)
+                return Query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
 
             throw new Exception("This property can't be filtered");
         }
