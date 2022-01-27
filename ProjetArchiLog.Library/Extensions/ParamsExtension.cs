@@ -24,7 +24,7 @@ namespace ProjetArchiLog.Library.Extensions
         {
             List<string> ModelPropertiesNames = GetModelProperties<TModel>();
 
-            return QueryParams.IntersectBy(ModelPropertiesNames, x=>x.Key);
+            return QueryParams.IntersectBy(ModelPropertiesNames, x=>x.Key.ToLower());
                 
         }
 

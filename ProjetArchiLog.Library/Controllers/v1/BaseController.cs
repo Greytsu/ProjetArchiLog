@@ -10,7 +10,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
 {
     [Route("api/v1/[controller]")]
     [ApiController]
-    public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
+    public abstract class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
         protected static readonly String[] API_PARAMS = { "Sort", "Page", "Size" };
@@ -25,6 +25,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         {
             Log.Information("GET ALL " + typeof(TModel).Name);
 
+            //checking if bad params in request
             List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
             if (BadParams.Count > 0)
                 return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
@@ -32,6 +33,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
             GetRequest = GetRequest.HandleSorting(SortParams);
+            GetRequest = GetRequest.HandleFiltering<TModel>(this.Request.Query);
 
             return await GetRequest.ToListAsync();
         }
