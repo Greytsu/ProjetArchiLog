@@ -8,17 +8,17 @@ namespace ProjetArchiLog.Library.Extensions
 {
     public static class FilteringExtension
     {
-        public static IQueryable<TModel> HandleFiltering<TModel>(this IQueryable<TModel> Query, IQueryCollection QueryParams)
+        public static IQueryable<TModel> HandleFiltering<TModel>(this IQueryable<TModel> query, IQueryCollection queryParams)
         {
             Log.Information("Filtering");
-            FilteringParams<TModel> filteringParams = new FilteringParams<TModel>(QueryParams);
+            FilteringParams<TModel> filteringParams = new FilteringParams<TModel>(queryParams);
 
             foreach (var filter in filteringParams.Filters)
             {
-                Query = Query.ToLambdaFilter<TModel>(filter.Key, filter.Value);
+                query = query.ToLambdaFilter<TModel>(filter.Key, filter.Value);
             }
 
-            return Query;
+            return query;
         }
     }
 }

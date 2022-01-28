@@ -11,33 +11,33 @@ namespace ProjetArchiLog.Library.Extensions
 {
     public static class SortingExtension
     {
-        public static IQueryable<TModel> HandleSorting<TModel>(this IQueryable<TModel> Query, SortingParams Params)
+        public static IQueryable<TModel> HandleSorting<TModel>(this IQueryable<TModel> query, SortingParams Params)
         {
             if (!Params.HasSort())
-                return Query;
+                return query;
 
-            String[] SortingParams = Params.GetParams();
+            String[] sortingParams = Params.GetParams();
 
-            String Collumn = SortingParams[0].Split("-")[0];
-            if (!ExistProperty<TModel>(Collumn))
+            String collumn = sortingParams[0].Split("-")[0];
+            if (!ExistProperty<TModel>(collumn))
                 throw new Exception();
 
-            IOrderedQueryable<TModel> SortedQuery = SortingParams[0].ToLower().Contains("desc") ?
-                Query.OrderByDescending(ToLambda<TModel>(Collumn)) :
-                Query.OrderBy(ToLambda<TModel>(Collumn));
+            IOrderedQueryable<TModel> sortedQuery = sortingParams[0].ToLower().Contains("desc") ?
+                query.OrderByDescending(ToLambda<TModel>(collumn)) :
+                query.OrderBy(ToLambda<TModel>(collumn));
 
-            for (int i = 1; i < SortingParams.Length; i++)
+            for (int i = 1; i < sortingParams.Length; i++)
             {
-                Collumn = SortingParams[i].Split("-")[0];
-                if (!ExistProperty<TModel>(Collumn))
+                collumn = sortingParams[i].Split("-")[0];
+                if (!ExistProperty<TModel>(collumn))
                     throw new Exception();
 
-                SortedQuery = SortingParams[i].ToLower().Contains("desc") ?
-                    SortedQuery.ThenByDescending(ToLambda<TModel>(Collumn)) :
-                    SortedQuery.ThenBy(ToLambda<TModel>(Collumn));
+                sortedQuery = sortingParams[i].ToLower().Contains("desc") ?
+                    sortedQuery.ThenByDescending(ToLambda<TModel>(collumn)) :
+                    sortedQuery.ThenBy(ToLambda<TModel>(collumn));
             }
 
-            return SortedQuery;
+            return sortedQuery;
         }
     }
 }

@@ -13,7 +13,6 @@ namespace ProjetArchiLog.Library.Extensions
     {
         public static IQueryable<TModel> HandleSearch<TModel> (this IQueryable<TModel> Query, IQueryCollection QueryParams)
         {
-            Console.WriteLine("test1");
             var SearchParams = QueryParams.ExtractModelProperties<TModel>();
 
             foreach (var param in SearchParams)
@@ -35,8 +34,6 @@ namespace ProjetArchiLog.Library.Extensions
 
                     Query = Query.ToLambaIfStatement<TModel>(method, properties, valueCopy);
                 }
-
-                Console.WriteLine(values);
             }
 
             return Query;

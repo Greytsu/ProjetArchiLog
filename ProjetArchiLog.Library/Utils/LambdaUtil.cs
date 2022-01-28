@@ -15,12 +15,12 @@ namespace ProjetArchiLog.Library.Utils
             return Expression.Lambda<Func<TModel, object>>(propAsObject, parameter);
         }
         
-        public static IQueryable<TModel> ToLambdaFilter<TModel>(this IQueryable<TModel> Query, string propertyName, string propertyValues)
+        public static IQueryable<TModel> ToLambdaFilter<TModel>(this IQueryable<TModel> query, string propertyName, string propertyValues)
         {
-            var type = typeof(TModel).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.PropertyType;
+            Type? type = typeof(TModel).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.PropertyType;
             if (!(type == typeof(string) || type == typeof(int) || type == typeof(DateTime)))
             {
-                throw new Exception("This property can't be filtered : " + propertyName);
+                throw new Exception("This property type can't be filtered : " + propertyName);
             }
 
             var parameter = Expression.Parameter(typeof(TModel));
@@ -39,13 +39,11 @@ namespace ProjetArchiLog.Library.Utils
 
                 if (range[0] != "")
                 {
-                    Console.WriteLine("Greater than " + range[0]);
                     filteredQuery = Expression.GreaterThanOrEqual(property, Expression.Convert(Expression.Constant(Convert.ChangeType(range[0], type)), type));
                 }
 
                 if (range[1] != "")
                 {
-                    Console.WriteLine("Lesser than " + range[1]);
                     var condition = Expression.LessThanOrEqual(property, Expression.Convert(Expression.Constant(Convert.ChangeType(range[1], type)), type));
                     filteredQuery = filteredQuery == null ? condition : Expression.And(filteredQuery, condition);
                 }
@@ -63,19 +61,19 @@ namespace ProjetArchiLog.Library.Utils
 
 
             if (filteredQuery != null)
-                return Query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
+                return query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
 
             throw new Exception("Failed to filter");
         }
 
-        public static IQueryable<TModel> ToLambaIfStatement<TModel>(this IQueryable<TModel> Query, string ifStatement, string propertyName, string value)
+        public static IQueryable<TModel> ToLambaIfStatement<TModel>(this IQueryable<TModel> query, string ifStatement, string propertyName, string value)
         {
             MethodInfo methodInfo = typeof(string).GetMethod(ifStatement, new[] { typeof(string) });
             var parameter = Expression.Parameter(typeof(TModel));
             var property = Expression.Property(parameter, propertyName);
             var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(value, typeof(string)) });
 
-            return Query.Where(Expression.Lambda<Func<TModel, bool>>(condition, parameter));
+            return query.Where(Expression.Lambda<Func<TModel, bool>>(condition, parameter));
         }
     }
 }
