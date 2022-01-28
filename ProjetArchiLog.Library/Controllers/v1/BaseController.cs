@@ -3,6 +3,7 @@ using ProjetArchiLog.Library.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjetArchiLog.Library.Extensions;
+using static ProjetArchiLog.Library.Extensions.ParamsExtension;
 using Serilog;
 using System.Collections;
 
@@ -12,7 +13,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
     public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
-        protected static readonly String[] API_PARAMS = { "Sort", "Page", "Size" };
+        protected static readonly String[] API_PARAMS = { "Sort", "Page", "Size", "Fields" };
 
         public BaseController(TContext context)
         {
@@ -21,13 +22,13 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
         [HttpGet]
         [Route("api/v1/[controller]", Name = "GetAll")]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams)
+        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams, [FromQuery] string? Fields)
         {
             Log.Information("GET ALL {0}" , typeof(TModel).Name);
 
-            List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
+            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, Fields);
             if (BadParams.Count > 0)
-                return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
+                return BadRequest(BadParams);
 
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
@@ -42,7 +43,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         {
             Log.Information("SEARCH MODEL{0}" , typeof(TModel).Name);
 
-            List<string> BadParams = this.Request.Query.Keys.CheckParams<TModel>(API_PARAMS);
+            List<string> BadParams = this.Request.Query.Keys.CheckParamsKeys<TModel>(API_PARAMS);
             if (BadParams.Count > 0)
                 return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
 
