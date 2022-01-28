@@ -35,6 +35,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
             var getRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
+            getRequest = getRequest.HandleFiltering<TModel>(this.Request.Query);
             getRequest = getRequest.HandleSorting(sortParams);
 
             this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
@@ -60,9 +61,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
             GetRequest = GetRequest.HandleSearch(this.Request.Query);
-
             GetRequest = GetRequest.HandleSorting(SortParams);
-            GetRequest = GetRequest.HandleFiltering<TModel>(this.Request.Query);
 
             this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
 
