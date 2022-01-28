@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using ProjetArchiLog.Library.Extensions;
 
 namespace ProjetArchiLog.Library.Utils
 {
@@ -17,72 +18,54 @@ namespace ProjetArchiLog.Library.Utils
         public static IQueryable<TModel> ToLambdaFilter<TModel>(this IQueryable<TModel> Query, string propertyName, string propertyValues)
         {
             var type = typeof(TModel).GetProperty(propertyName, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance)?.PropertyType;
-            
+            if (!(type == typeof(string) || type == typeof(int) || type == typeof(DateTime)))
+            {
+                throw new Exception("This property can't be filtered : " + propertyName);
+            }
+
             var parameter = Expression.Parameter(typeof(TModel));
             var property = Expression.Property(parameter, propertyName);
-            Expression filteredQuery = null;
-
-            if (type == typeof(string))
+            BinaryExpression filteredQuery = null;
+            
+            if (propertyValues.StartsWith("[") && propertyValues.EndsWith("]"))
             {
-                Console.WriteLine("string");
-                if (propertyValues.Contains("["))
+
+                if (type == typeof(string))
                     throw new Exception("String type can't be filtered by an array");
 
-                MethodInfo? methodInfo = typeof(string).GetMethod("Equals", new[] { typeof(string) });
-                foreach (var param in propertyValues.Split(","))
+                var range = propertyValues.Replace("[", "").Replace("]", "").Split(",");
+                if (range.Length != 2)
+                    throw new Exception("Range filtering only accepts 2 arguments");
+
+                if (range[0] != "")
                 {
-                    var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(param, typeof(string)) });
+                    Console.WriteLine("Greater than " + range[0]);
+                    filteredQuery = Expression.GreaterThanOrEqual(property, Expression.Convert(Expression.Constant(Convert.ChangeType(range[0], type)), type));
+                }
+
+                if (range[1] != "")
+                {
+                    Console.WriteLine("Lesser than " + range[1]);
+                    var condition = Expression.LessThanOrEqual(property, Expression.Convert(Expression.Constant(Convert.ChangeType(range[1], type)), type));
+                    filteredQuery = filteredQuery == null ? condition : Expression.And(filteredQuery, condition);
+                }
+
+
+            }
+            else
+            {
+                foreach (var value in propertyValues.Split(","))
+                {
+                    var condition = Expression.Equal(property, Expression.Convert(Expression.Constant(Convert.ChangeType(value, type)), type));
                     filteredQuery = filteredQuery == null ? condition : Expression.Or(filteredQuery, condition);
                 }
             }
-            
-            else if (type == typeof(int))
-            {
-                Console.WriteLine("int");
-                if (propertyValues.Contains("["))
-                {
-                    var paramValues = propertyValues.Replace("[", "").Replace("]","").Split(",");
-                    if (paramValues.Length == 2)
-                    {
-                        int paramInt = 0;
-                        Int32.TryParse(paramValues[0], out paramInt);
 
-                        MethodInfo? methodInfo = typeof(int).GetMethod("CompareTo", new[] { typeof(int) });
-                        if(methodInfo == null) Console.WriteLine("null");
-                        var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
-                        filteredQuery = condition;
-                        
-                        Int32.TryParse(paramValues[1], out paramInt);
-                        
-                        methodInfo = typeof(int).GetMethod("CompareTo", new[] { typeof(int) });
-                        condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
-                        filteredQuery = condition;
-                    }
-                }
-                else
-                {
-                    MethodInfo? methodInfo = typeof(int).GetMethod("Equals", new[] { typeof(int) });
-                    foreach (string param in propertyValues.Split(","))
-                    {
-                        int paramInt = 0;
-                        Int32.TryParse(param, out paramInt);
-                        
-                        var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(paramInt, typeof(int)) });
-                        filteredQuery = filteredQuery == null ? condition : Expression.Or(filteredQuery, condition);
-                    }
-                }
-            }
-            
-            else if (type == typeof(DateTime))
-            {
-                Console.WriteLine("DateTime");
-            }
-            
-            
-            if(filteredQuery != null)
+
+            if (filteredQuery != null)
                 return Query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
 
-            throw new Exception("This property can't be filtered");
+            throw new Exception("Failed to filter");
         }
     }
 }
