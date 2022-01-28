@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using PartialResponse.AspNetCore.Mvc;
 using ProjetArchiLog.API.Data;
 using ProjetArchiLog.Library.Config;
 using Serilog;
+using PartialResponse.Extensions.DependencyInjection;
 
 //Initialize Serilog
 Log.Logger = new LoggerConfiguration()
@@ -64,7 +67,12 @@ try
         options.UseSqlServer(builder.Configuration.GetConnectionString("Archi"))
     );
 
-    builder.Services.AddMvcCore();
+    //builder.Services.AddMvcCore();
+    builder.Services
+        .AddMvc()
+        .AddPartialJsonFormatters();
+    builder.Services.Configure<MvcPartialJsonOptions>(options => options.IgnoreCase = true);
+
 
     //Wire Serilog into the WebApplicationBuilder
     builder.Host.UseSerilog((ctx, lc) => lc

@@ -1,5 +1,4 @@
-﻿using NSubstitute.Core;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace ProjetArchiLog.Library.Utils
