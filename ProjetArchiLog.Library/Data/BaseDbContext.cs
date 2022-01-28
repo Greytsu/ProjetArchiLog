@@ -41,21 +41,23 @@ namespace ProjetArchiLog.Library.Data
 
         private void ChangeCreateState()
         {
-            var createEntities = ChangeTracker.Entries().Where(x => x.State != EntityState.Added);
+            var createEntities = ChangeTracker.Entries().Where(x => x.State == EntityState.Added);
             foreach (var item in createEntities)
             {
                 if (item.Entity is BaseModel model)
                 {
+                    model.IsDeleted = false;
+                    model.DeletedAt = null;
                     model.CreatedAt = DateTime.Now;
                     model.UpdatedAt = DateTime.Now;
-                    item.State = EntityState.Modified;
+                    item.State = EntityState.Added;
                 }
             }
         }
 
         private void ChangeUpdateState()
         {
-            var updateEntities = ChangeTracker.Entries().Where(x => x.State != EntityState.Modified);
+            var updateEntities = ChangeTracker.Entries().Where(x => x.State == EntityState.Modified);
             foreach (var item in updateEntities)
             {
                 if (item.Entity is BaseModel model)

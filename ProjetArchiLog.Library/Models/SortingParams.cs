@@ -2,16 +2,16 @@
 {
     public class SortingParams
     {
-        public String? Sort { get; set; }
+        public String? sort { get; set; }
 
         public bool HasSort()
         {
-            return !string.IsNullOrWhiteSpace(Sort);
+            return !string.IsNullOrWhiteSpace(sort);
         }
 
         public String[]? GetParams()
         {
-            return Sort?.Split(",");
+            return sort?.Split(",");
         }
     }
 }

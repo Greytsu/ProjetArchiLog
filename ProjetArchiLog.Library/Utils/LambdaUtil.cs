@@ -4,7 +4,7 @@ using ProjetArchiLog.Library.Extensions;
 
 namespace ProjetArchiLog.Library.Utils
 {
-    public static  class LambdaUtil
+    public static class LambdaUtil
     {
         public static Expression<Func<TModel, object>> ToLambda<TModel>(string propertyName)
         {
@@ -66,6 +66,16 @@ namespace ProjetArchiLog.Library.Utils
                 return Query.Where(Expression.Lambda<Func<TModel, bool>>(filteredQuery, parameter));
 
             throw new Exception("Failed to filter");
+        }
+
+        public static IQueryable<TModel> ToLambaIfStatement<TModel>(this IQueryable<TModel> Query, string ifStatement, string propertyName, string value)
+        {
+            MethodInfo methodInfo = typeof(string).GetMethod(ifStatement, new[] { typeof(string) });
+            var parameter = Expression.Parameter(typeof(TModel));
+            var property = Expression.Property(parameter, propertyName);
+            var condition = Expression.Call(property, methodInfo, new Expression[] { Expression.Constant(value, typeof(string)) });
+
+            return Query.Where(Expression.Lambda<Func<TModel, bool>>(condition, parameter));
         }
     }
 }
