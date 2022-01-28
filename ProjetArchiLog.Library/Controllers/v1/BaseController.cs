@@ -14,7 +14,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
     public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
-        protected static readonly String[] API_PARAMS = { "Sort", "Page", "Size", "Fields" };
+        protected static readonly String[] ApiParams = { "Sort", "Page", "Size", "Fields" };
 
         public BaseController(TContext context)
         {
@@ -23,23 +23,23 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
         [HttpGet]
         [Route("api/v1/[controller]")]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] PaginationParams paginationModel, [FromQuery] SortingParams SortParams, [FromQuery] string? fields)
+        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] PaginationParams paginationModel, [FromQuery] SortingParams sortParams, [FromQuery] string? fields)
         {
             Log.Information("GET ALL {0}" , typeof(TModel).Name);
 
             PaginationParams validPaginationParams = new PaginationParams(paginationModel);
 
-            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, fields);
-            if (BadParams.Count > 0)
-                return BadRequest(BadParams);
+            List<dynamic> badParams = CheckAllParams<TModel>(ApiParams, this.Request.Query.Keys, sortParams, fields);
+            if (badParams.Count > 0)
+                return BadRequest(badParams);
 
-            var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
+            var getRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
-            GetRequest = GetRequest.HandleSorting(SortParams);
+            getRequest = getRequest.HandleSorting(sortParams);
 
             this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
 
-            return await GetRequest
+            return await getRequest
                 .Skip((validPaginationParams.page - 1) * validPaginationParams.size)
                 .Take(validPaginationParams.size)
                 .ToListAsync();
@@ -53,7 +53,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
             PaginationParams validPaginationParams = new PaginationParams(paginationModel);
 
-            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, fields);
+            List<dynamic> BadParams = CheckAllParams<TModel>(ApiParams, this.Request.Query.Keys, SortParams, fields);
             if (BadParams.Count > 0)
                 return BadRequest(BadParams);
 

@@ -8,42 +8,42 @@ namespace ProjetArchiLog.Library.Extensions
     public static class ParamsExtension
     {
 
-        //Ckecks if query's params are in models properties or in api's params
+        //Checks if query's params are in models properties or in api's params
         public static List<string> CheckParamsKeys<TModel>(this ICollection<string> QueryParamsNames, String[] ApiParams)
         {
-            List<string> ModelPropertiesNames = GetModelProperties<TModel>();
+            List<string> modelPropertiesNames = GetModelProperties<TModel>();
 
             List<string> BadParams = new();
             foreach (var paramValue in QueryParamsNames)
-                if (!ApiParams.Contains(paramValue, StringComparer.OrdinalIgnoreCase) && !ModelPropertiesNames.Contains(paramValue, StringComparer.OrdinalIgnoreCase))
+                if (!ApiParams.Contains(paramValue, StringComparer.OrdinalIgnoreCase) && !modelPropertiesNames.Contains(paramValue, StringComparer.OrdinalIgnoreCase))
                     BadParams.Add(paramValue);
 
             return BadParams;
         }
 
-        //Ckecks if fields's params are in models properties or in api's params
-        public static List<string> CheckParamsProperties<TModel>(this String QueryParamsNames, String[] ApiParams)
+        //Checks if fields's params are in models properties or in api's params
+        public static List<string> CheckParamsValues<TModel>(this String queryParamsNames, String[] apiParams)
         {
 
-            if(QueryParamsNames == null || QueryParamsNames == "*")
+            if(queryParamsNames == null || queryParamsNames == "*")
                 return new List<string>();
 
-            string[] fields = QueryParamsNames.Split(",");
-            List<string> ModelPropertiesNames = GetModelProperties<TModel>();
+            string[] fields = queryParamsNames.Replace("-desc", "").Replace("-asc", "").Split(",");
+            List<string> modelPropertiesNames = GetModelProperties<TModel>();
 
-            List<string> BadParams = new();
+            List<string> badParams = new();
             foreach (var paramValue in fields)
-                if (!ApiParams.Contains(paramValue, StringComparer.OrdinalIgnoreCase) && !ModelPropertiesNames.Contains(paramValue, StringComparer.OrdinalIgnoreCase))
-                    BadParams.Add(paramValue);
+                if (!modelPropertiesNames.Contains(paramValue, StringComparer.OrdinalIgnoreCase))
+                    badParams.Add(paramValue);
 
-            return BadParams;
+            return badParams;
         }
 
         public static List<dynamic> CheckAllParams<TModel>(String[] ApiParams, ICollection<string> QueryParams, SortingParams SortParams, string Fields)
         {
             List<string> BadParamsKeys = QueryParams.CheckParamsKeys<TModel>(ApiParams);
-            List<string> BadParamsFields = Fields.CheckParamsProperties<TModel>(ApiParams);
-            List<string> BadParamsSort = SortParams.sort.CheckParamsProperties<TModel>(ApiParams);
+            List<string> BadParamsFields = Fields.CheckParamsValues<TModel>(ApiParams);
+            List<string> BadParamsSort = SortParams.sort.CheckParamsValues<TModel>(ApiParams);
 
             var response = new List<dynamic>();
 
