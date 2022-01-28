@@ -11,7 +11,7 @@ using ProjetArchiLog.Library.Utils;
 namespace ProjetArchiLog.Library.Controllers.v1
 {
     [ApiController]
-    public class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
+    public abstract class BaseController<TContext, TModel> : ControllerBase where TContext : BaseDbContext where TModel : BaseModel
     {
         protected readonly TContext _context;
         protected static readonly String[] ApiParams = { "Sort", "Page", "Size", "Fields" };
@@ -62,6 +62,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
             GetRequest = GetRequest.HandleSearch(this.Request.Query);
 
             GetRequest = GetRequest.HandleSorting(SortParams);
+            GetRequest = GetRequest.HandleFiltering<TModel>(this.Request.Query);
 
             this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
 
