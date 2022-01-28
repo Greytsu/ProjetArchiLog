@@ -1,15 +1,20 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
+using static ProjetArchiLog.Library.Extensions.ParamsExtension;
 
 namespace ProjetArchiLog.Library.Services
 {
-    public class UriService
+    public static class UriService
     {
-        public static Uri GetUri(string route, int page, int size)
+        public static Uri GetUri(this HttpRequest request, int page, int size)
         {
-            var uri = new Uri(route);
-            var modifiedUri = QueryHelpers.AddQueryString(uri.ToString(), "page", page.ToString());
+            Uri uri = new Uri(string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), request.Path.ToUriComponent()));
+            IEnumerable<KeyValuePair<string, StringValues>> queryParams = request.ParamsWithoutPaging();
+
+            string modifiedUri = QueryHelpers.AddQueryString(uri.ToString(), "page", page.ToString());
             modifiedUri = QueryHelpers.AddQueryString(modifiedUri, "size", size.ToString());
-            //uri = QueryHelpers.AddQueryString(_baseUri, queryParams);
+            modifiedUri = QueryHelpers.AddQueryString(modifiedUri, queryParams);
 
             return new Uri(modifiedUri);
         }

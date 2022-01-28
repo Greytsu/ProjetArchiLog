@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using ProjetArchiLog.Library.Models;
 using System.Collections;
 
@@ -42,7 +43,7 @@ namespace ProjetArchiLog.Library.Extensions
         {
             List<string> BadParamsKeys = QueryParams.CheckParamsKeys<TModel>(ApiParams);
             List<string> BadParamsFields = Fields.CheckParamsProperties<TModel>(ApiParams);
-            List<string> BadParamsSort = SortParams.Sort.CheckParamsProperties<TModel>(ApiParams);
+            List<string> BadParamsSort = SortParams.sort.CheckParamsProperties<TModel>(ApiParams);
 
             var response = new List<dynamic>();
 
@@ -84,6 +85,15 @@ namespace ProjetArchiLog.Library.Extensions
                         }
                     });
             }
+
+            return response;
+        }
+
+        public static IEnumerable<KeyValuePair<string, StringValues>> ParamsWithoutPaging(this HttpRequest request)
+        {
+            List<string> pagingParams = new List<string>();
+
+            IEnumerable<KeyValuePair<string, StringValues>> response = request.Query.Where(x => x.Key.ToLower() != "size" && x.Key.ToLower() != "page");
 
             return response;
         }

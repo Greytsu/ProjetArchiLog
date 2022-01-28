@@ -6,6 +6,7 @@ using ProjetArchiLog.Library.Extensions;
 using static ProjetArchiLog.Library.Extensions.ParamsExtension;
 using Serilog;
 using System.Collections;
+using ProjetArchiLog.Library.Utils;
 
 namespace ProjetArchiLog.Library.Controllers.v1
 {
@@ -21,12 +22,14 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpGet]
-        [Route("api/v1/[controller]", Name = "GetAll")]
-        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] SortingParams SortParams, [FromQuery] string? Fields)
+        [Route("api/v1/[controller]")]
+        public async Task<ActionResult<IEnumerable<TModel>>> GetAll([FromQuery] PaginationParams paginationModel, [FromQuery] SortingParams SortParams, [FromQuery] string? fields)
         {
             Log.Information("GET ALL {0}" , typeof(TModel).Name);
 
-            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, Fields);
+            PaginationParams validPaginationParams = new PaginationParams(paginationModel);
+
+            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, fields);
             if (BadParams.Count > 0)
                 return BadRequest(BadParams);
 
@@ -34,18 +37,25 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
             GetRequest = GetRequest.HandleSorting(SortParams);
 
-            return await GetRequest.ToListAsync();
+            this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
+
+            return await GetRequest
+                .Skip((validPaginationParams.page - 1) * validPaginationParams.size)
+                .Take(validPaginationParams.size)
+                .ToListAsync();
         }
 
         [HttpGet]
-        [Route("api/v1/[controller]/search", Name = "Search")]
-        public async Task<ActionResult<IEnumerable<TModel>>> Search([FromQuery] SortingParams SortParams)
+        [Route("api/v1/[controller]/search")]
+        public async Task<ActionResult<IEnumerable<TModel>>> Search([FromQuery] PaginationParams paginationModel, [FromQuery] SortingParams SortParams, [FromQuery] string? fields)
         {
             Log.Information("SEARCH MODEL{0}" , typeof(TModel).Name);
 
-            List<string> BadParams = this.Request.Query.Keys.CheckParamsKeys<TModel>(API_PARAMS);
+            PaginationParams validPaginationParams = new PaginationParams(paginationModel);
+
+            List<dynamic> BadParams = CheckAllParams<TModel>(API_PARAMS, this.Request.Query.Keys, SortParams, fields);
             if (BadParams.Count > 0)
-                return BadRequest("Incorrect query params : " + string.Join(", ", BadParams));
+                return BadRequest(BadParams);
 
             var GetRequest = _context.Set<TModel>().Where(x => !x.IsDeleted);
 
@@ -53,11 +63,16 @@ namespace ProjetArchiLog.Library.Controllers.v1
 
             GetRequest = GetRequest.HandleSorting(SortParams);
 
-            return await GetRequest.ToListAsync();
+            this.Response.Headers.Add("Link", string.Join(",", validPaginationParams.PagingHeader<TContext, TModel>(_context, this.Request)));
+
+            return await GetRequest
+                .Skip((validPaginationParams.page - 1) * validPaginationParams.size)
+                .Take(validPaginationParams.size)
+                .ToListAsync();
         }
 
         [HttpGet]
-        [Route("api/v1/[controller]/{id}", Name = "GetOneById")]
+        [Route("api/v1/[controller]/{id}")]
         public async Task<ActionResult<TModel>> GetOneById(Guid id)
         {
             var customer =  await _context.Set<TModel>().SingleOrDefaultAsync(x => x.Id == (id) && !x.IsDeleted);
@@ -71,7 +86,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpPut]
-        [Route("api/v1/[controller]/{id}", Name = "PutCustomer")]
+        [Route("api/v1/[controller]/{id}")]
         public async Task<IActionResult> PutCustomer(Guid id, TModel model)
         {
             if (id != model.Id)
@@ -99,7 +114,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpPost]
-        [Route("api/v1/[controller]", Name = "PostCustomer")]
+        [Route("api/v1/[controller]")]
         public async Task<ActionResult<TModel>> PostCustomer(TModel model)
         {
             _context.Set<TModel>().Add(model);
@@ -109,7 +124,7 @@ namespace ProjetArchiLog.Library.Controllers.v1
         }
 
         [HttpDelete]
-        [Route("api/v1/[controller]/{id}", Name = "DeleteCustomer")]
+        [Route("api/v1/[controller]/{id}")]
         public async Task<IActionResult> DeleteCustomer(Guid id)
         {
             var context = _context.Set<TModel>();
